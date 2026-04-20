@@ -267,7 +267,7 @@ importers:
         version: 9.1.2(eslint@9.31.0)
       eslint-plugin-prettier:
         specifier: ^5.1.3
-        version: 5.5.1(@types/eslint@9.6.1)(eslint-config-prettier@9.1.2(eslint@9.31.0))(eslint@9.31.0)(prettier@3.6.2)
+        version: 5.5.1(@types/eslint@9.6.1)(eslint-config-prettier@9.1.2(eslint@9.31.0))(eslint@9.31.0)(prettier@3.8.3)
       eslint-plugin-react:
         specifier: ^7.37.2
         version: 7.37.5(eslint@9.31.0)
@@ -302,8 +302,8 @@ importers:
         specifier: ^8.4.38
         version: 8.5.6
       prettier:
-        specifier: ^3.2.5
-        version: 3.6.2
+        specifier: ^3.8.3
+        version: 3.8.3
       raw-loader:
         specifier: ^0.5.1
         version: 0.5.1
@@ -4523,8 +4523,8 @@ packages:
     resolution: {integrity: sha512-GbK2cP9nraSSUF9N2XwUwqfzlAFlMNYYl+ShE/V+H8a9uNl/oUqB1w2EL54Jh0OlyRSd8RfWYJ3coVS4TROP2w==}
     engines: {node: '>=6.0.0'}
 
-  prettier@3.6.2:
-    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -8873,10 +8873,10 @@ snapshots:
     dependencies:
       eslint: 9.31.0
 
-  eslint-plugin-prettier@5.5.1(@types/eslint@9.6.1)(eslint-config-prettier@9.1.2(eslint@9.31.0))(eslint@9.31.0)(prettier@3.6.2):
+  eslint-plugin-prettier@5.5.1(@types/eslint@9.6.1)(eslint-config-prettier@9.1.2(eslint@9.31.0))(eslint@9.31.0)(prettier@3.8.3):
     dependencies:
       eslint: 9.31.0
-      prettier: 3.6.2
+      prettier: 3.8.3
       prettier-linter-helpers: 1.0.0
       synckit: 0.11.8
     optionalDependencies:
@@ -10695,7 +10695,7 @@ snapshots:
     dependencies:
       fast-diff: 1.3.0
 
-  prettier@3.6.2: {}
+  prettier@3.8.3: {}
 
   pretty-error@4.0.0:
     dependencies:
