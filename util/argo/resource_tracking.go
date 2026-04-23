@@ -154,7 +154,11 @@ func (rt *resourceTracking) SetAppInstance(un *unstructured.Unstructured, key, v
 	}
 	switch trackingMethod {
 	case v1alpha1.TrackingMethodLabel:
-		err := kube.SetAppInstanceLabel(un, key, val)
+		val, err := TruncateLabel(val)
+		if err != nil {
+			return fmt.Errorf("failed to set app instance label: %w", err)
+		}
+		err = kube.SetAppInstanceLabel(un, key, val)
 		if err != nil {
 			return fmt.Errorf("failed to set app instance label: %w", err)
 		}

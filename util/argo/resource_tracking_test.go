@@ -31,6 +31,23 @@ func TestSetAppInstanceLabel(t *testing.T) {
 	assert.Equal(t, "my-app", app)
 }
 
+func TestSetAppInstanceLabelLongName(t *testing.T) {
+	yamlBytes, err := os.ReadFile("testdata/svc.yaml")
+	require.NoError(t, err)
+
+	var obj unstructured.Unstructured
+	err = yaml.Unmarshal(yamlBytes, &obj)
+	require.NoError(t, err)
+
+	resourceTracking := NewResourceTracking()
+
+	err = resourceTracking.SetAppInstance(&obj, common.LabelKeyAppInstance, "my-app-with-an-extremely-long-name-that-is-over-sixty-three-characters", "", v1alpha1.TrackingMethodLabel, "")
+	require.NoError(t, err)
+
+	// the label should be truncated to 63 characters
+	assert.Equal(t, "my-app-with-an-extremely-long-name-that-is-over-sixty-three-cha", obj.GetLabels()[common.LabelKeyAppInstance])
+}
+
 func TestSetAppInstanceAnnotation(t *testing.T) {
 	yamlBytes, err := os.ReadFile("testdata/svc.yaml")
 	require.NoError(t, err)
