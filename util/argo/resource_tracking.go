@@ -20,6 +20,22 @@ var (
 	OkEndPattern                   = regexp.MustCompile("[a-zA-Z0-9]$")
 )
 
+// TruncateLabel truncates a label value to comply with the Kubernetes 63-character
+// label length limit, stripping trailing non-alphanumeric characters after truncation.
+func TruncateLabel(val string) (string, error) {
+	if len(val) <= LabelMaxLength {
+		return val, nil
+	}
+	val = val[:LabelMaxLength]
+	for !OkEndPattern.MatchString(val) {
+		if len(val) <= 1 {
+			return "", errors.New("unable to truncate label to not end with a special character")
+		}
+		val = val[:len(val)-1]
+	}
+	return val, nil
+}
+
 // ResourceTracking defines methods which allow setup and retrieve tracking information to resource
 type ResourceTracking interface {
 	GetAppName(un *unstructured.Unstructured, key string, trackingMethod v1alpha1.TrackingMethod, installationID string) string
@@ -150,16 +166,9 @@ func (rt *resourceTracking) SetAppInstance(un *unstructured.Unstructured, key, v
 		if err != nil {
 			return err
 		}
-		if len(val) > LabelMaxLength {
-			val = val[:LabelMaxLength]
-			// Prevent errors if the truncated name ends in a special character.
-			// See https://github.com/argoproj/argo-cd/issues/18237.
-			for !OkEndPattern.MatchString(val) {
-				if len(val) <= 1 {
-					return errors.New("failed to set app instance label: unable to truncate label to not end with a special character")
-				}
-				val = val[:len(val)-1]
-			}
+		val, err = TruncateLabel(val)
+		if err != nil {
+			return fmt.Errorf("failed to set app instance label: %w", err)
 		}
 		err = kube.SetAppInstanceLabel(un, key, val)
 		if err != nil {

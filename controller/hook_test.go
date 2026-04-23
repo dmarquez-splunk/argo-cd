@@ -1,12 +1,16 @@
 package controller
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/argoproj/argo-cd/gitops-engine/pkg/utils/kube"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/argoproj/argo-cd/v3/util/argo"
 )
 
 func TestIsHookOfType(t *testing.T) {
@@ -484,4 +488,66 @@ func TestExecuteHooksAlreadyExistsLogic(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHookLabelTruncation(t *testing.T) {
+	appLabelKey := "app.kubernetes.io/instance"
+
+	tests := []struct {
+		name          string
+		instanceName  string
+		expectedLabel string
+	}{
+		{
+			name:          "short name is not truncated",
+			instanceName:  "my-app",
+			expectedLabel: "my-app",
+		},
+		{
+			name:          "name over 63 characters is truncated",
+			instanceName:  "my-app-with-an-extremely-long-name-that-is-over-sixty-three-characters",
+			expectedLabel: "my-app-with-an-extremely-long-name-that-is-over-sixty-three-cha",
+		},
+		{
+			name:          "trailing special character stripped after truncation",
+			instanceName:  "the-very-suspicious-name-with-precisely-sixty-three-characters-with-hyphen",
+			expectedLabel: "the-very-suspicious-name-with-precisely-sixty-three-characters",
+		},
+		{
+			name:          "namespaced instance name over 63 characters is truncated",
+			instanceName:  "argocd_security-automation-response-cyclops-iad10-play-morse-scs001-2af22cac",
+			expectedLabel: "argocd_security-automation-response-cyclops-iad10-play-morse-sc",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			obj := &unstructured.Unstructured{}
+			obj.SetGroupVersionKind(schema.GroupVersionKind{Group: "batch", Version: "v1", Kind: "Job"})
+			obj.SetName("my-hook")
+			obj.SetNamespace("default")
+			obj.SetAnnotations(map[string]string{"argocd.argoproj.io/hook": "PreDelete"})
+
+			labels := obj.GetLabels()
+			if labels == nil {
+				labels = make(map[string]string)
+			}
+			truncated, err := argo.TruncateLabel(tt.instanceName)
+			require.NoError(t, err)
+			labels[appLabelKey] = truncated
+			obj.SetLabels(labels)
+
+			assert.Equal(t, tt.expectedLabel, obj.GetLabels()[appLabelKey])
+			assert.LessOrEqual(t, len(obj.GetLabels()[appLabelKey]), argo.LabelMaxLength)
+		})
+	}
+}
+
+func TestHookLabelTruncationMatchesSyncedResources(t *testing.T) {
+	longName := strings.Repeat("a", 100)
+
+	truncated, err := argo.TruncateLabel(longName)
+	require.NoError(t, err)
+	assert.Equal(t, argo.LabelMaxLength, len(truncated))
+	assert.Regexp(t, argo.OkEndPattern, truncated)
 }

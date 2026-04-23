@@ -391,3 +391,55 @@ func TestResourceIdNormalizer_Normalize_ConfigHasOldLabel(t *testing.T) {
 func TestIsOldTrackingMethod(t *testing.T) {
 	assert.True(t, IsOldTrackingMethod(string(v1alpha1.TrackingMethodLabel)))
 }
+
+func TestTruncateLabel(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+		hasErr   bool
+	}{
+		{
+			name:     "short label unchanged",
+			input:    "my-app",
+			expected: "my-app",
+		},
+		{
+			name:     "exactly 63 characters unchanged",
+			input:    "this-application-name-is-exactly-sixty-three-characters-long-ok",
+			expected: "this-application-name-is-exactly-sixty-three-characters-long-ok",
+		},
+		{
+			name:     "over 63 characters truncated",
+			input:    "my-app-with-an-extremely-long-name-that-is-over-sixty-three-characters",
+			expected: "my-app-with-an-extremely-long-name-that-is-over-sixty-three-cha",
+		},
+		{
+			name:     "trailing special character stripped after truncation",
+			input:    "the-very-suspicious-name-with-precisely-sixty-three-characters-with-hyphen",
+			expected: "the-very-suspicious-name-with-precisely-sixty-three-characters",
+		},
+		{
+			name:   "all special characters returns error",
+			input:  "----------------------------------------------------------------",
+			hasErr: true,
+		},
+		{
+			name:     "empty string unchanged",
+			input:    "",
+			expected: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := TruncateLabel(tt.input)
+			if tt.hasErr {
+				assert.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+				assert.LessOrEqual(t, len(result), LabelMaxLength)
+			}
+		})
+	}
+}

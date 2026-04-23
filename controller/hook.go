@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
 
+	"github.com/argoproj/argo-cd/v3/util/argo"
 	"github.com/argoproj/argo-cd/v3/util/lua"
 
 	appv1 "github.com/argoproj/argo-cd/v3/pkg/apis/application/v1alpha1"
@@ -140,7 +141,12 @@ func (ctrl *ApplicationController) executeHooks(hookType HookType, app *appv1.Ap
 		if labels == nil {
 			labels = make(map[string]string)
 		}
-		labels[appLabelKey] = app.InstanceName(ctrl.namespace)
+		instanceName := app.InstanceName(ctrl.namespace)
+		truncated, err := argo.TruncateLabel(instanceName)
+		if err != nil {
+			return false, fmt.Errorf("failed to truncate app instance label for hook %s: %w", key, err)
+		}
+		labels[appLabelKey] = truncated
 		obj.SetLabels(labels)
 
 		logCtx.Infof("Creating %s hook resource: %s", hookType, key)
